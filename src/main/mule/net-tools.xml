@@ -25,17 +25,14 @@ attributes.requestPath]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<scripting:execute engine="groovy" doc:name="Execute" doc:id="d4d71943-f44e-4acb-8678-951dbf1aa6e1">
-    <scripting:code><![CDATA[
-        def pathSegments = path.tokenize('/')
-        def safePath = pathSegments.collect { segment -> URLEncoder.encode(segment, 'UTF-8') }.join('/')
-        
-        def resourcePath = "web/${safePath}"
-        if ("/".equals(path)) {
-            resourcePath = "web/index.html"
+    <scripting:code>
+        def sanitizedPath = java.nio.file.Paths.get(path).normalize().toString()
+        if ("/".equals(sanitizedPath)) {
+            org.mule.runtime.core.api.util.IOUtils.getResourceAsString("web/index.html", this.getClass());
+        } else {
+            org.mule.runtime.core.api.util.IOUtils.getResourceAsString("web" + sanitizedPath, this.getClass());
         }
-        
-        org.mule.runtime.core.api.util.IOUtils.getResourceAsString(resourcePath, this.getClass())
-    ]]></scripting:code>
+    </scripting:code>
     <scripting:parameters><![CDATA[#[{path: vars.path}]]]></scripting:parameters>
 </scripting:execute>
 	</flow>
