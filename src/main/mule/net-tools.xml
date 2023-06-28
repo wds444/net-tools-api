@@ -25,13 +25,19 @@ attributes.requestPath]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<scripting:execute engine="groovy" doc:name="Execute" doc:id="d4d71943-f44e-4acb-8678-951dbf1aa6e1">
-			<scripting:code>if (&quot;/&quot;.equals(path)) {
-	org.mule.runtime.core.api.util.IOUtils.getResourceAsString(&quot;web/index.html&quot;, this.getClass());
-} else {
-	org.mule.runtime.core.api.util.IOUtils.getResourceAsString(&quot;web&quot; + path, this.getClass());
-}</scripting:code>
-			<scripting:parameters><![CDATA[#[{path: vars.path}]]]></scripting:parameters>
-		</scripting:execute>
+    <scripting:code><![CDATA[
+        def pathSegments = path.tokenize('/')
+        def safePath = pathSegments.collect { segment -> URLEncoder.encode(segment, 'UTF-8') }.join('/')
+        
+        def resourcePath = "web/${safePath}"
+        if ("/".equals(path)) {
+            resourcePath = "web/index.html"
+        }
+        
+        org.mule.runtime.core.api.util.IOUtils.getResourceAsString(resourcePath, this.getClass())
+    ]]></scripting:code>
+    <scripting:parameters><![CDATA[#[{path: vars.path}]]]></scripting:parameters>
+</scripting:execute>
 	</flow>
     <flow name="ui-css" doc:id="bc50f62f-51f7-4841-955b-014eb52b2976" >
 		<http:listener doc:name="Listener" doc:id="24f59827-51c3-48d1-abce-18d4143f58f3" config-ref="net-tools-httpListenerConfig" path="/css/*" outputMimeType="text/css"/>
